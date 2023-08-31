@@ -1,8 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { respostaPadrao } from "../../types/respostaPadrao";
 import type { cadastroRequisicao } from "../../types/cadastroRequisicao";
+import { UsuarioModel } from "../../models/UsuarioModel"
 
-const endpointCadastro = (
+const endpointCadastro = async (
     req : NextApiRequest,
     res : NextApiResponse<respostaPadrao>
 )  => {
@@ -24,7 +25,8 @@ const endpointCadastro = (
             return res.status(400).json({error : 'Senha inválida.'});
         }
 
-        return res.status(200).json({msg : 'Dados corretos.'})
+        await UsuarioModel.create(usuario);
+        return res.status(200).json({msg : 'Usuário criado com sucesso.'})
     }
     return res.status(405).json({error : 'Método informado não é válido.'})
 }
