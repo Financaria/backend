@@ -1,3 +1,4 @@
+
 import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
 import { respostaPadrao } from "@/types/respostaPadrao";
 import jwt, {JwtPayload} from "jsonwebtoken";
@@ -12,7 +13,7 @@ export const validarToken = (handler : NextApiHandler) => (req : NextApiRequest,
         }
     
         if(!req.headers && !req){
-            return res.status(500).json({error : 'Erro interno do servidor: A requisição não contém cabeçalhos válidos.'});
+            return res.status(400).json({error : 'Erro interno do servidor: A requisição não contém cabeçalhos válidos.'});
         }
 
         if(req.method === 'OPTIONS'){
@@ -20,19 +21,19 @@ export const validarToken = (handler : NextApiHandler) => (req : NextApiRequest,
             //pegar o token no authorization
             const authorization = req.headers['authorization'];
             if (!authorization){
-                return res.status(404).json({ error: 'Ocorreu um erro ao validar o token de acesso.'});
+                return res.status(401).json({ error: 'Ocorreu um erro ao validar o token de acesso.'});
             }
 
             //retirar "bearer "
             const token = authorization.substring(7);
             if (!token){
-                return res.status(404).json({ error: 'Ocorreu um erro ao validar o token de acesso.'});
+                return res.status(401).json({ error: 'Ocorreu um erro ao validar o token de acesso.'});
             }
 
             //Recebe o token a ser verificado e a chave de assinatura e criptografia.
             const decoded = jwt.verify(token, JWT_PRIVATE_KEY as string) as JwtPayload;
             if (!decoded){
-                return res.status(404).json({ error: 'Ocorreu um erro ao validar o token de acesso.'});
+                return res.status(401).json({ error: 'Ocorreu um erro ao validar o token de acesso.'});
             }
 
             // verificar se existe query na requisição, se não, cria ela com array vazio.
