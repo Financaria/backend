@@ -5,8 +5,6 @@ const UsuarioSchema = new Schema({
     email: {type : String, required : true},
     senha: {type : String, required : true},
     despesas: {type : Array, required : true, default : []},
-    receitas: {type : Array, required : true, default : []},
-    saldo: {type: Number, default : 0}
 });
 
 export const UsuarioModel = (mongoose.models.users || 
