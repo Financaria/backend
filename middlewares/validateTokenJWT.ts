@@ -12,7 +12,7 @@ export const validarToken = (handler : NextApiHandler) => (req : NextApiRequest,
             return res.status(500).json({error : 'Erro interno do servidor: A chave privada JWT não está configurada corretamente.'});
         }
     
-        if(!req.headers && !req){
+        if(!req || !req.headers){
             return res.status(400).json({error : 'Erro interno do servidor: A requisição não contém cabeçalhos válidos.'});
         }
 
