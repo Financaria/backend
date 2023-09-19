@@ -14,7 +14,7 @@ const endpointCadastro = async (
         const usuario = req.body as cadastroRequisicao;
 
         if (!usuario.nome || usuario.nome.length < 2){
-            return res.status(400).json({error : 'Nome inválido.'})
+            return res.status(400).json({error : 'Nome inválido.'});
         }
 
         if(!usuario.email || usuario.email.length < 5
@@ -40,9 +40,9 @@ const endpointCadastro = async (
             senha : md5(usuario.senha)
         }
         await UsuarioModel.create(usuarioASerSalvo);
-        return res.status(200).json({msg : 'Usuário criado com sucesso.'})
+        return res.status(200).json({msg : 'Usuário criado com sucesso.'});
     }
-    return res.status(405).json({error : 'Método informado não é válido.'})
+    return res.status(405).json({error : 'Método informado não é válido.'});
 }
 
 export default conectarMongoDB(endpointCadastro);

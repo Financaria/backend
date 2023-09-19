@@ -16,7 +16,7 @@ export const validarToken = (handler : NextApiHandler) => (req : NextApiRequest,
             return res.status(400).json({error : 'Erro interno do servidor: A requisição não contém cabeçalhos válidos.'});
         }
 
-        if(req.method === 'OPTIONS'){
+        if(req.method !== 'OPTIONS'){
             
             //pegar o token no authorization
             const authorization = req.headers['authorization'];
@@ -26,6 +26,7 @@ export const validarToken = (handler : NextApiHandler) => (req : NextApiRequest,
 
             //retirar "bearer "
             const token = authorization.substring(7);
+            console.log(token)
             if (!token){
                 return res.status(401).json({ error: 'Ocorreu um erro ao validar o token de acesso.'});
             }
