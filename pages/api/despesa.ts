@@ -3,31 +3,30 @@ import type {respostaPadrao} from '../../types/respostaPadrao';
 import { conectarMongoDB } from '../../middlewares/conectarMongoDB';
 import { DespesaModel } from '../../models/DespesaModel';
 import { UsuarioModel } from '../../models/UsuarioModel';
-// import { validarToken } from '../../middlewares/';
+import { validarToken } from '../../middlewares/validateTokenJWT';
 
 const endpointDespesa = async (
     req : NextApiRequest,
-    res : NextApiResponse<respostaPadrao>
+    res : NextApiResponse<respostaPadrao | any>
 ) => {
 
-    if(req.method === 'POST'){
-        // pegar os dados do usuário logado  -  como eu pego os dados do usuario logado?
+    try{
+        // pegar os dados do usuário logado
+        const {userId} = req?.query;
+        console.log(userId)
+        const usuario = await UsuarioModel.findById(userId);
+        console.log(usuario)
 
-        try{
-            // const {userId} = req.query;
-
-            const {idUsuario, descricao, categoria, valor, dataVencimento, dataPagamento, parcelas, recorrencia} = req.body;
-            
-            const usuario = await UsuarioModel.findById(idUsuario);   // ({email : login, senha : md5(senha)})
+        if(req.method === 'POST'){
+           
             if(!usuario){
                 return res.status(400).json({error : 'Usuário não encontrado.'});
             }
 
-            
-
             if(!req || !req.body){
                 return res.status(400).json({error : 'Parâmetros de entrada não informados.'});
             }
+            const {descricao, categoria, valor, dataVencimento, dataPagamento, parcelas, recorrencia} = req?.body;
 
             if(!descricao || descricao.length < 2){
                 return res.status(400).json({error : 'Descrição não é válida.'});
@@ -38,17 +37,15 @@ const endpointDespesa = async (
             }
 
             if(!dataVencimento){
-                return res.status(400).json({error : 'É necessário informar uma data.'});
+                return res.status(400).json({error : 'É necessário informar a data de vencimento.'});
             }
 
             if(!dataPagamento){
                 dataPagamento : dataVencimento;
-                console.log('dataVencimento', dataVencimento)
             }
 
             const despesa = {
-                // idUsuario : usuario._id,
-                idUsuario,
+                idUsuario : usuario._id,
                 descricao,
                 categoria,
                 valor,
@@ -56,18 +53,18 @@ const endpointDespesa = async (
                 dataPagamento : dataVencimento,
                 dataInclusao : new Date(),
                 parcelas,
-                recorrencia    
+                recorrencia
             }
 
-            await DespesaModel.create(despesa)
-            return res.status(200).json({msg : 'Despesa criada com sucesso.'});
-        }catch(e){
-            console.log(e);
-            return res.status(400).json({error: 'Erro ao cadastrar despesa.'});
+            await DespesaModel.create(despesa);
+            return res.status(200).json({msg : 'Despesa cadastrada com sucesso.'});
         }
-
+            
+    }catch(e){
+        console.log(e);
+        return res.status(400).json({error: 'Erro ao cadastrar despesa.'});
     }
 
 }
 
-export default conectarMongoDB(endpointDespesa);
+export default validarToken(conectarMongoDB(endpointDespesa));
