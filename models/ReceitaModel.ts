@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const ReceitaSchema = new mongoose.Schema({
     IdUsuario: {type : String, required : true},
-    categoria : {type : String, required : true},
+    nomeCategoria : {type : String, required : true},
     valor : {type : Number, required : true},
     dataInclusao : {type : Date, required : true}, //newdate
     dataRecebimento : {type : Date, required : true},
