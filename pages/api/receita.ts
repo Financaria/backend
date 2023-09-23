@@ -9,9 +9,7 @@ const endpointReceita = async (req : NextApiRequest, res : NextApiResponse<respo
     try {
         // Pegar o ID do usuário a partir dos parâmetros da URL
         const userId = req?.query.userId;
-        console.log(userId);
         const usuario = await UsuarioModel.findById(userId);
-        console.log(usuario);
         
         // Verificar o método da solicitação HTTP (apenas POST é permitido)
         if(req.method === "POST"){
@@ -34,7 +32,6 @@ const endpointReceita = async (req : NextApiRequest, res : NextApiResponse<respo
             } = req?.body;
             
             if (!nomeCategoria || nomeCategoria.length < 2) {
-                console.log(nomeCategoria);
                 return res.status(400).json({ error: "O nome da categoria deve ter pelo menos 2 caracteres." });
             }
             
