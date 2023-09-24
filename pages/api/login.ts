@@ -1,3 +1,4 @@
+import { CORSPolicy } from './../../middlewares/CORSpolicy';
 import type { NextApiRequest, NextApiResponse } from "next";
 import { conectarMongoDB } from '../../middlewares/conectarMongoDB'
 import type { respostaPadrao } from "../../types/respostaPadrao"
@@ -36,4 +37,4 @@ const endpointLogin = async (
     return res.status(405).json({error : 'Método informado não é válido.'});
 }
 
-export default conectarMongoDB(endpointLogin);
+export default CORSPolicy(conectarMongoDB(endpointLogin));

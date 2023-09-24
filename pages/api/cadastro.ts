@@ -1,3 +1,4 @@
+import { CORSPolicy } from './../../middlewares/CORSpolicy';
 import type { NextApiRequest, NextApiResponse } from "next";
 import { conectarMongoDB } from "../../middlewares/conectarMongoDB"
 import type { respostaPadrao } from "../../types/respostaPadrao";
@@ -12,6 +13,7 @@ const endpointCadastro = async (
 
     if(req.method === 'POST'){
         const usuario = req.body as cadastroRequisicao;
+        console.log(usuario)
 
         if (!usuario.nome || usuario.nome.length < 2){
             return res.status(400).json({error : 'Nome inválido.'});
@@ -45,4 +47,4 @@ const endpointCadastro = async (
     return res.status(405).json({error : 'Método informado não é válido.'});
 }
 
-export default conectarMongoDB(endpointCadastro);
+export default CORSPolicy(conectarMongoDB(endpointCadastro));
