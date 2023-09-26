@@ -9,20 +9,15 @@ const endpointDespesa = async (
     req : NextApiRequest,
     res : NextApiResponse<respostaPadrao | any>
 ) => {
-
     try{
-        // pegar os dados do usuário logado
         const {userId} = req?.query;
-        console.log(userId)
         const usuario = await UsuarioModel.findById(userId);
-        console.log(usuario)
+
+        if(!usuario){
+            return res.status(400).json({error : 'Usuário não encontrado.'});
+        }
 
         if(req.method === 'POST'){
-           
-            if(!usuario){
-                return res.status(400).json({error : 'Usuário não encontrado.'});
-            }
-
             if(!req || !req.body){
                 return res.status(400).json({error : 'Parâmetros de entrada não informados.'});
             }
@@ -40,24 +35,23 @@ const endpointDespesa = async (
                 return res.status(400).json({error : 'É necessário informar a data de vencimento.'});
             }
 
-            if(!dataPagamento){
-                dataPagamento : dataVencimento;
-            }
-
             const despesa = {
                 idUsuario : usuario._id,
                 descricao,
                 categoria,
                 valor,
                 dataVencimento,
-                dataPagamento : dataVencimento,
+                dataPagamento,
                 dataInclusao : new Date(),
                 parcelas,
                 recorrencia
             }
+            
+            await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: -despesa.valor } });
 
             await DespesaModel.create(despesa);
-            return res.status(200).json({msg : 'Despesa cadastrada com sucesso.'});
+            return res.status(201).json({ msg: 'Despesa cadastrada com sucesso.' });
+
         }
             
     }catch(e){
