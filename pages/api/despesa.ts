@@ -4,20 +4,19 @@ import { conectarMongoDB } from '../../middlewares/conectarMongoDB';
 import { DespesaModel } from '../../models/DespesaModel';
 import { UsuarioModel } from '../../models/UsuarioModel';
 import { validarToken } from '../../middlewares/validateTokenJWT';
+import nc from "next-connect";
 
-const endpointDespesa = async (
-    req : NextApiRequest,
-    res : NextApiResponse<respostaPadrao | any>
-) => {
-    try{
-        const {userId} = req?.query;
-        const usuario = await UsuarioModel.findById(userId);
 
-        if(!usuario){
-            return res.status(400).json({error : 'Usuário não encontrado.'});
-        }
+const handler = nc()
+    .post(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao | any>) => {
+        try{
+            const {userId} = req?.query;
+            const usuario = await UsuarioModel.findById(userId);
 
-        if(req.method === 'POST'){
+            if(!usuario){
+                return res.status(400).json({error : 'Usuário não encontrado.'});
+            }
+
             if(!req || !req.body){
                 return res.status(400).json({error : 'Parâmetros de entrada não informados.'});
             }
@@ -52,13 +51,26 @@ const endpointDespesa = async (
             await DespesaModel.create(despesa);
             return res.status(201).json({ msg: 'Despesa cadastrada com sucesso.' });
 
+        }catch(e){
+            console.log(e);
         }
-            
-    }catch(e){
-        console.log(e);
-        return res.status(400).json({error: 'Erro ao cadastrar despesa.'});
-    }
+        return res.status(400).json({error: 'Erro ao cadastrar despesa.'}); 
+    })
+    .get(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao | any>) => {
+        try{
+            const {userId} = req?.query;
+            // listar todas as despesas do usuário logado, referentes ao mês X
+            // const usuario = await UsuarioModel.findById(userId);
+            const despesas = await DespesaModel.find({idUsuario: userId});
+            return res.status(200).json(despesas);
 
-}
+            //incluir a lógica para pegar apenas as despesas do mês escolhido.
 
-export default validarToken(conectarMongoDB(endpointDespesa));
+        }catch(e){
+            console.log(e);
+        }
+
+        return res.status(400).json({error : 'Não foi possível obter dados.'})
+    });
+
+export default validarToken(conectarMongoDB(handler));
