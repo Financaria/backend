@@ -5,6 +5,8 @@ import { DespesaModel } from '../../models/DespesaModel';
 import { UsuarioModel } from '../../models/UsuarioModel';
 import { validarToken } from '../../middlewares/validateTokenJWT';
 import nc from "next-connect";
+import { CORSPolicy } from './../../middlewares/CORSpolicy';
+
 
 
 const handler = nc()
@@ -59,9 +61,8 @@ const handler = nc()
     .get(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao | any>) => {
         try{
             const {userId} = req?.query;
-            // listar todas as despesas do usuário logado, referentes ao mês X
-            // const usuario = await UsuarioModel.findById(userId);
-            const despesas = await DespesaModel.find({idUsuario: userId});
+            const despesas = await DespesaModel.find({idUsuario: userId})
+            .sort({dataInclusao : -1});;
             return res.status(200).json(despesas);
 
             //incluir a lógica para pegar apenas as despesas do mês escolhido.
@@ -73,4 +74,5 @@ const handler = nc()
         return res.status(400).json({error : 'Não foi possível obter dados.'})
     });
 
-export default validarToken(conectarMongoDB(handler));
+export default CORSPolicy(validarToken(conectarMongoDB(handler)));
+// export default CORSPolicy(conectarMongoDB(endpointLogin));
