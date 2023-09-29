@@ -58,14 +58,28 @@ const handler = nc()
         }
         return res.status(400).json({error: 'Erro ao cadastrar despesa.'}); 
     })
-    .get(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao | any>) => {
+    .get(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao | any[]>) => {
         try{
             const {userId} = req?.query;
-            const despesas = await DespesaModel.find({idUsuario: userId})
-            .sort({dataInclusao : -1});;
-            return res.status(200).json(despesas);
+            // const despesas = await DespesaModel.find({idUsuario: userId})
+            // .sort({dataInclusao : -1});;
+            // return res.status(200).json(despesas);
 
             //incluir a lógica para pegar apenas as despesas do mês escolhido.
+
+            const {filtro} = req.query;
+            if(!filtro || filtro.length < 2){
+                const despesas = await DespesaModel.find({idUsuario: userId})
+                .sort({dataInclusao : -1});;
+                return res.status(200).json(despesas);
+            }
+
+            const despesasEncontradas = await DespesaModel.find({
+                $or: [{ descricao: {$regex: filtro, $options : 'i'}},
+                    { categoria: {$regex: filtro, $options : 'i'}}]
+            });
+            return res.status(200).json(despesasEncontradas);
+
 
         }catch(e){
             console.log(e);
