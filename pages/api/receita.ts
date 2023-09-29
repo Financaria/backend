@@ -82,25 +82,6 @@ function converteData(dataString: string) {
 
     return data.toDate();
 
-    
-    /*const regex = /^(\d{2})(\d{2})(\d{4})$/ ;
-    const match = dataString.match(regex); //match agora é um array
-
-    if (!match) {
-        throw new Error("Formato de data inválido. Use 'ddmmaaaa'.");
-    }
-
-    const dia = parseInt(match[1]);
-    const mes = parseInt(match[2]) - 1;
-    const ano = parseInt(match[3]);
-
-    if (isNaN(dia) || isNaN(mes) || isNaN(ano)) {
-        throw new Error("Data inválida.");
-    }
-
-    const data = new Date(ano, mes, dia);
-
-    return data;*/
 }
 
 export default validarToken(conectarMongoDB(endpointReceita));
