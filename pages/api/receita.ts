@@ -48,6 +48,15 @@ const endpointReceita = async (req : NextApiRequest, res : NextApiResponse<respo
 
             const dataConvertida = converteData(dataRecebimento);
 
+            const receitaExistente = await ReceitaModel.findOne({
+                IdUsuario: usuario._id,
+                nomeCategoria : nomeCategoria
+            });
+
+            if(receitaExistente){
+                return res.status(400).json({ error: "Já existe uma receita com a mesma categoria." });
+            }
+
             const receita = new ReceitaModel({
                 IdUsuario: usuario._id,
                 nomeCategoria : nomeCategoria,
@@ -58,8 +67,8 @@ const endpointReceita = async (req : NextApiRequest, res : NextApiResponse<respo
                 recorrencia
             });
 
+            
             await receita.save();
-
             return res.status(200).json({msg : "Receita cadastrada com sucesso!"})
         }else{
             return res.status(405).json({ error: "Método não encontrado." });
