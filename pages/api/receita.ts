@@ -4,6 +4,7 @@ import { UsuarioModel } from "@/models/UsuarioModel";
 import { ReceitaModel } from "@/models/ReceitaModel";
 import { conectarMongoDB } from "@/middlewares/conectarMongoDB";
 import { validarToken } from "@/middlewares/validateTokenJWT";
+import moment from "moment";
 
 const endpointReceita = async (req : NextApiRequest, res : NextApiResponse<respostaPadrao>) => {
     try {
@@ -72,8 +73,17 @@ const endpointReceita = async (req : NextApiRequest, res : NextApiResponse<respo
 }
 
 function converteData(dataString: string) {
+    const formatoData = 'DD/MM/YYYY';
+    const data = moment(dataString, formatoData);
 
-    const regex = /^(\d{2})(\d{2})(\d{4})$/ ;
+    if (!data.isValid()) {
+        throw new Error("Formato de data inválido ou data inválida.");
+    }
+
+    return data.toDate();
+
+    
+    /*const regex = /^(\d{2})(\d{2})(\d{4})$/ ;
     const match = dataString.match(regex); //match agora é um array
 
     if (!match) {
@@ -90,7 +100,7 @@ function converteData(dataString: string) {
 
     const data = new Date(ano, mes, dia);
 
-    return data;
+    return data;*/
 }
 
 export default validarToken(conectarMongoDB(endpointReceita));
