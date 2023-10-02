@@ -8,83 +8,88 @@ import moment from "moment";
 import nc from 'next-connect';
 
 const handler = nc()
-    .post(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao>) => {
+    .post(async (req: NextApiRequest, res: NextApiResponse<respostaPadrao>) => {
         try {
-            if(req.method === "POST"){
-    
-                const userId = req?.query.userId;
-                const usuario = await UsuarioModel.findById(userId);
-                
-                if(!usuario){
-                    return res.status(400).json({ error: "Usuário não encontrado." });
-                }
-                
-                if (!req || !req.body) {
-                    return res.status(400).json({ error: "O corpo da solicitação é obrigatório." });
-                }
-                
-                const {
-                    nomeCategoria,
-                    valor,
-                    dataRecebimento,
-                    parcelas,
-                    recorrencia
-                } = req?.body;
-                
-                const minimoCaractere = 2;
-    
-                if (!nomeCategoria || nomeCategoria.length < minimoCaractere) {
-                    return res.status(400).json({ error: "O nome da categoria deve ter pelo menos 2 caracteres." });
-                }
-                
-                const valorMinimo = 1;
-    
-                if(!valor || valor < valorMinimo){
-                    return res.status(400).json({ error: "O valor deve ser maior que zero." });
-                }
-    
-                if(!dataRecebimento){
-                    return res.status(400).json({error : 'É necessário informar a data de recebimento.'});
-    
-                }
-    
-                const dataConvertida = converteData(dataRecebimento);
-    
-                const receitaExistente = await ReceitaModel.findOne({
-                    IdUsuario: usuario._id,
-                    nomeCategoria : nomeCategoria
-                });
-    
-                if(receitaExistente){
-                    return res.status(400).json({ error: "Já existe uma receita com a mesma categoria." });
-                }
-    
-                const receita = new ReceitaModel({
-                    IdUsuario: usuario._id,
-                    nomeCategoria : nomeCategoria,
-                    valor,
-                    dataInclusao: new Date(),
-                    dataRecebimento : dataConvertida,
-                    parcelas,
-                    recorrencia
-                });
-    
-                
-                await receita.save();
-                return res.status(200).json({msg : "Receita cadastrada com sucesso!"})
-            }else{
-                return res.status(405).json({ error: "Método não encontrado." });
+            const {userId} = req?.query;
+            const user = await UsuarioModel.findById(userId);
+
+            if (!user) {
+                return res.status(400).json({ error: "Usuário não encontrado." });
             }
-    
-           
+
+            if (!req || !req.body) {
+                return res.status(400).json({ error: "O corpo da solicitação é obrigatório." });
+            }
+
+            const {
+                categoria,
+                nome,
+                valor,
+                dataRecebimento,
+                parcelas,
+                recorrencia
+            } = req?.body;
+
+            const minCharLength = 2;
+            const maxCharLength = 15;
+
+            if (!categoria || categoria.length < minCharLength || categoria.length > maxCharLength) {
+                return res.status(400).json({ error: "A categoria deve ter pelo menos 2 e no máximo 15 caracteres." });
+            }
+
+            if (!nome || nome.length < minCharLength || nome.length > maxCharLength) {
+                return res.status(400).json({ error: "O nome da nome deve ter pelo menos 2 e no máximo 15 caracteres." });
+            }
+
+            const minValue = 1;
+
+            if (!valor || valor < minValue) {
+                return res.status(400).json({ error: "O valor deve ser maior que zero." });
+            }
+
+            if (!dataRecebimento) {
+                return res.status(400).json({ error: 'É necessário informar a data de recebimento.' });
+
+            }
+
+            const convertedDate = convertDate(dataRecebimento);
+
+            const existingRevenue = await ReceitaModel.findOne({
+                IdUsuario: user._id,
+                nome: nome
+            });
+
+            if (existingRevenue) {
+                return res.status(400).json({ error: "Já existe uma receita com a mesmo nome." });
+            }
+
+            const receita = new ReceitaModel({
+                IdUsuario: user._id,
+                categoria: categoria,
+                nome: nome,
+                valor,
+                dataInclusao: new Date(),
+                dataRecebimento: convertedDate,
+                parcelas,
+                recorrencia
+            });
+
+            await receita.save();
+            
+            return res.status(200).json({ msg: "Receita cadastrada com sucesso!" })
+
         } catch (e) {
             console.log(e);
-            return res.status(500).json({error : "Ocorreu um erro ao criar a receita."})
+            return res.status(500).json({ error: "Ocorreu um erro ao criar a receita." })
         }
     });
+    
+// .get()
+// .put()
+//.delete()
 
-
-function converteData(dataString: string) {
+function convertDate(dataString: string) {
+    
     const formatoData = 'DD/MM/YYYY';
     const data = moment(dataString, formatoData);
 
