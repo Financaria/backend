@@ -74,6 +74,7 @@ const handler = nc()
             const anoAlvo = 2023;
             // const mesAlvo = parseInt(filtro[0]);
             const mesAlvo = parseInt(filtro);
+            // const diaAlvo = parseInt(filtro);
             console.log(filtro)
             console.log(typeof filtro)
             console.log(mesAlvo)
@@ -87,6 +88,7 @@ const handler = nc()
                             $and: [
                                 { $eq: [{ $year: '$dataVencimento' }, anoAlvo]},
                                 { $eq: [{ $month: '$dataVencimento' }, mesAlvo]}
+                                
                             ]
                         }
                     },
@@ -97,7 +99,9 @@ const handler = nc()
                                 { $eq: [{ $month: '$dataPagamento' }, mesAlvo]}
                             ]
                         }
-                    }
+                    },
+                    { dataVencimento: filtro },
+                    { dataPagamento: filtro }
                 ]
             });
             return res.status(200).json(despesasEncontradas);
