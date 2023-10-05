@@ -108,8 +108,6 @@ const handler = nc()
             return res.status(500).json({ error: "Ops! Algo deu errado ao buscar as receitas. Por favor, tente novamente mais tarde." })
         }
 
-        
-        //validar se as receita foram buscadas ou não
         // buscar as receitar por categoria
         // validar
         // buscar as receitar por nome
