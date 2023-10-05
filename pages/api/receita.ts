@@ -93,15 +93,15 @@ const handler = nc()
                 return res.status(400).json({ error: "Usuário não encontrado." });
             }
         
-            const receitas = await ReceitaModel.find({
+            const todasAsReceitas = await ReceitaModel.find({
                 IdUsuario: user._id
             });
 
-            if(receitas.length === 0){
+            if(todasAsReceitas.length === 0){
                 return res.status(400).json({ error: "Nenhuma receita encontrada para este usuário." });
             }
 
-            return res.status(200).json(receitas);
+            return res.status(200).json(todasAsReceitas);
 
         } catch (e) {
             console.log(e);
