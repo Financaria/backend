@@ -95,8 +95,11 @@ const handler = nc()
         
             const todasAsReceitas = await ReceitaModel.find({
                 IdUsuario: user._id
+            }).sort({
+                dataRecebimento : 1
             });
 
+            
             if(todasAsReceitas.length === 0){
                 return res.status(400).json({ error: "Nenhuma receita encontrada para este usuário." });
             }
