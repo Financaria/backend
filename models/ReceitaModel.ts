@@ -11,5 +11,4 @@ const ReceitaSchema = new mongoose.Schema({
     recorrencia : {type : Boolean, required : false, default : false} 
 });
 
-// compilar nosso esquema em um Model
 export const ReceitaModel = (mongoose.models.receita || mongoose.model('receita', ReceitaSchema));

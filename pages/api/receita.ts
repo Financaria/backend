@@ -82,9 +82,44 @@ const handler = nc()
             console.log(e);
             return res.status(500).json({ error: "Ocorreu um erro ao criar a receita." })
         }
+    })
+    .get(async (req: NextApiRequest, res: NextApiResponse<respostaPadrao | any[]>)  => {
+
+        try {
+            const {userId} = req?.query;
+            const user = await UsuarioModel.findById(userId);
+
+            if (!user) {
+                return res.status(400).json({ error: "Usuário não encontrado." });
+            }
+        
+            const receitas = await ReceitaModel.find({
+                IdUsuario: user._id
+            });
+
+            if(receitas.length === 0){
+                return res.status(400).json({ error: "Nenhuma receita encontrada para este usuário." });
+            }
+
+            return res.status(200).json(receitas);
+
+        } catch (e) {
+            console.log(e);
+            return res.status(500).json({ error: "Ops! Algo deu errado ao buscar as receitas. Por favor, tente novamente mais tarde." })
+        }
+
+        
+        //validar se as receita foram buscadas ou não
+        // buscar as receitar por categoria
+        // validar
+        // buscar as receitar por nome
+        // validar
+        // buscar as receitar por mês especifico(vou ter que tratar a data de recebimento)
+        // validar
+        // buscar as receitar por ano especifico(vou ter que tratar a data de recebimento)
+        // validar
+
     });
-    
-// .get()
 // .put()
 //.delete()
 
