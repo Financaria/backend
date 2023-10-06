@@ -22,8 +22,8 @@ const handler = nc()
             }
 
             const {
+                descricao,
                 categoria,
-                nome,
                 valor,
                 dataRecebimento,
                 parcelas,
@@ -37,8 +37,8 @@ const handler = nc()
                 return res.status(400).json({ error: "A categoria deve ter pelo menos 2 e no máximo 15 caracteres." });
             }
 
-            if (!nome || nome.length < minCharLength || nome.length > maxCharLength) {
-                return res.status(400).json({ error: "O nome da nome deve ter pelo menos 2 e no máximo 15 caracteres." });
+            if (!descricao || descricao.length < minCharLength || descricao.length > maxCharLength) {
+                return res.status(400).json({ error: "O descricao da descricao deve ter pelo menos 2 e no máximo 15 caracteres." });
             }
 
             const minValue = 1;
@@ -56,23 +56,25 @@ const handler = nc()
 
             const existingRevenue = await ReceitaModel.findOne({
                 IdUsuario: user._id,
-                nome: nome
+                descricao: descricao
             });
 
             if (existingRevenue) {
-                return res.status(400).json({ error: "Já existe uma receita com a mesmo nome." });
+                return res.status(400).json({ error: "Já existe uma receita com a mesmo descricao." });
             }
 
             const receita = new ReceitaModel({
                 IdUsuario: user._id,
+                descricao: descricao,
                 categoria: categoria,
-                nome: nome,
                 valor,
                 dataInclusao: new Date(),
                 dataRecebimento: convertedDate,
                 parcelas,
                 recorrencia
             });
+
+            await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: +receita.valor } });
 
             await receita.save();
             
@@ -86,8 +88,8 @@ const handler = nc()
     .get(async (req: NextApiRequest, res: NextApiResponse<respostaPadrao | any[]>)  => {
 
         try {
-            const {userId} = req?.query;
-            const user = await UsuarioModel.findById(userId);
+            
+            const user = await UsuarioModel.findById(req.query.userId);
 
             if (!user) {
                 return res.status(400).json({ error: "Usuário não encontrado." });
