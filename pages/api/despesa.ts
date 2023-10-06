@@ -23,7 +23,7 @@ const handler = nc()
             console.log('req', req)
 
             if(!req || !req.body){
-                                return res.status(400).json({error : 'Parâmetros de entrada não informados.'});
+                return res.status(400).json({error : 'Parâmetros de entrada não informados.'});
             }
 
             const {descricao, categoria, valor, dataVencimento, dataPagamento, parcelas, recorrencia} = req?.body;
@@ -66,15 +66,16 @@ const handler = nc()
         try{
             const {userId} = req?.query;
             const usuario = await UsuarioModel.findById(userId);
-            console.log('usuario', usuario);
+            //console.log('usuario', usuario);
 
             if(!usuario){
                 return res.status(400).json({error: 'Usuário não encontrado.'});
             }
 
-            const {filtro} = req.query;
+            const {filtro} = req?.query;
+
             const anoAlvo = 2023;
-            const mesAlvo = parseInt(filtro);
+            //const mesAlvo = parseInt(filtro.toString());
             
             if(!filtro || filtro.length < 2){
                 const despesas = await DespesaModel.find({idUsuario: userId})
@@ -82,6 +83,8 @@ const handler = nc()
                 return res.status(200).json(despesas);
             }
             
+            const mesAlvo = parseInt(filtro.toString());
+
             const despesasEncontradas = await DespesaModel.find({
                 $or: [{ descricao: {$regex : filtro, $options : 'i'}},
                     { categoria: {$regex: filtro, $options : 'i'}},
@@ -127,7 +130,7 @@ const handler = nc()
             }
 
             const {descricao} = req.body;
-            console.log(descricao);
+            //console.log(descricao);
             if(descricao && descricao > 2){
                 despesa.descricao = descricao;
                 //console.log(descricao);
@@ -167,11 +170,5 @@ const handler = nc()
             return res.status(400).json({error : 'Não foi possível atualizar a despesa.'})
         }
     });
-
-export const config = {
-    api : {
-        bodyParser : false
-    }
-}
 
 export default CORSPolicy(validarToken(conectarMongoDB(handler)));
