@@ -18,10 +18,6 @@ const handler = nc()
                 return res.status(400).json({error : 'Usuário não encontrado.'});
             }
 
-            //console.log(req.body)
-            //console.log('categoria', req?.body?.categoria)
-            console.log('req', req)
-
             if(!req || !req.body){
                 return res.status(400).json({error : 'Parâmetros de entrada não informados.'});
             }
@@ -66,51 +62,69 @@ const handler = nc()
         try{
             const {userId} = req?.query;
             const usuario = await UsuarioModel.findById(userId);
-            //console.log('usuario', usuario);
 
             if(!usuario){
                 return res.status(400).json({error: 'Usuário não encontrado.'});
             }
 
             const {filtro} = req?.query;
-
-            const anoAlvo = 2023;
-            //const mesAlvo = parseInt(filtro.toString());
-            
-            if(!filtro || filtro.length < 2){
-                const despesas = await DespesaModel.find({idUsuario: userId})
-                .sort({dataInclusao : -1});;
-                return res.status(200).json(despesas);
+            if(filtro){
+                //buscar no banco as despesas do usuário que contenham a descricao ou categoria igual ao filtro.
+                const despesaEncontrada = await DespesaModel.find({
+                    $or: [{ descricao: {$regex : filtro, $options : 'i'}},
+                    { categoria: {$regex: filtro, $options : 'i'}
+                    }],
+                    $and: [{idUsuario : usuario._id}]
+                })
+                return res.status(200).json(despesaEncontrada);
             }
-            
-            const mesAlvo = parseInt(filtro.toString());
 
-            const despesasEncontradas = await DespesaModel.find({
-                $or: [{ descricao: {$regex : filtro, $options : 'i'}},
-                    { categoria: {$regex: filtro, $options : 'i'}},
-                    { 
+            const {mes} = req?.query;
+            if(mes){
+                //buscar no banco todas as despesas do usuário do mês selecionado (vencimento e/ou pagamento).
+                const mesAlvo = parseInt(mes.toString());
+                const anoAlvo = new Date().getFullYear();
+                const despesasMes = await DespesaModel.find({
+                    $or: [{
                         $expr: {
                             $and: [
                                 { $eq: [{ $year: '$dataVencimento' }, anoAlvo]},
                                 { $eq: [{ $month: '$dataVencimento' }, mesAlvo]}
                                 
                             ]
-                        }
+                        },
                     },
-                    { 
+                    {
                         $expr: {
                             $and: [
                                 { $eq: [{ $year: '$dataPagamento' }, anoAlvo]},
                                 { $eq: [{ $month: '$dataPagamento' }, mesAlvo]}
                             ]
                         }
-                    },
-                    { dataVencimento: filtro },
-                    { dataPagamento: filtro }
-                ],
-                $and: [{idUsuario : usuario._id}]
-            });
-            return res.status(200).json(despesasEncontradas);
+                    }],
+                    $and: [{idUsuario : usuario._id}]            
+                });
+                return res.status(200).json(despesasMes);
+            }
+
+            const {data} = req?.query;
+            if(data){
+                //buscar no banco todas as despesas do usuário na data informada.
+                const despesaData = await DespesaModel.find({
+                    $or: [
+                        { dataVencimento: data },
+                        { dataPagamento: data }
+                    ],
+                    $and: [{idUsuario : usuario._id}]
+                })
+                return res.status(200).json(despesaData);
+            }
+
+            if(!filtro || !mes || !data){
+                const despesas = await DespesaModel.find({idUsuario: userId})
+                .sort({dataInclusao : -1});
+                return res.status(200).json(despesas);
+            }
 
         }catch(e){
             console.log(e);
