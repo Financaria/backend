@@ -134,50 +134,47 @@ const handler = nc()
     })
     .put(async(req : NextApiRequest, res : NextApiResponse<respostaPadrao> | any) => {
         try{
-            const {id} = req?.query;
-            //const usuario = await UsuarioModel.findById(userId);
-            const despesa = await DespesaModel.findById(id);
-            //.findOne(_idUsuario : userId && )
+            const {userId, id} = req?.query;
+            const usuario = await UsuarioModel.findById(userId);
+            const despesaID = id;
+            const despesa = await DespesaModel.findById(despesaID);
+
+            if(!usuario){
+                return res.status(400).json({error: 'Usuário não encontrado.'});
+            }
 
             if(!despesa){
                 return res.status(400).json({error: 'Despesa não encontrada.'});
             }
 
-            const {descricao} = req.body;
-            //console.log(descricao);
-            if(descricao && descricao > 2){
-                despesa.descricao = descricao;
-                //console.log(descricao);
+            const { descricao, categoria, valor, dataVencimento, dataPagamento } = req?.body;
 
+            console.log("descrição", descricao);
+            if(descricao && descricao.length > 2){
+                despesa.descricao = descricao;
             }
 
-            const {categoria} = req.body;
-            if(categoria && categoria > 2){
+            if(categoria && categoria.length > 2){
                 despesa.categoria = categoria;
             }
 
-            const {valor} = req.body;
             if(valor){
                 despesa.valor = valor;
             }
 
-            const {dataVencimento} = req.body;
             if(dataVencimento){
                 despesa.dataVencimento = dataVencimento;
             }
 
-            const {dataPagamento} = req.body;
             if(dataPagamento){
                 despesa.dataPagamento = dataPagamento;
             }
 
-            return res.status(200).json({despesa})
+            console.log('despesa atualizada', despesa)
 
             await DespesaModel
-                .findByIdAndUpdate({_id : despesa._id}, despesa);
+                .findByIdAndUpdate(despesaID, despesa, { new: true });
             return res.status(200).json({msg: 'Despesa alterada com sucesso.'});
-            //console.log('despesa atualizada', despesa)
-
 
         }catch(e){
             console.log(e);
