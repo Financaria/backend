@@ -43,7 +43,6 @@ const handler = nc()
 
             if(senha && senha.length > 3){
                 usuario.senha = md5(senha);
-                console.log(senha)
             }
 
             await UsuarioModel.findByIdAndUpdate({_id : usuario._id}, usuario);

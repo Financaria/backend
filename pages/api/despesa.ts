@@ -149,7 +149,6 @@ const handler = nc()
 
             const { descricao, categoria, valor, dataVencimento, dataPagamento } = req?.body;
 
-            console.log("descrição", descricao);
             if(descricao && descricao.length > 2){
                 despesa.descricao = descricao;
             }
@@ -170,8 +169,6 @@ const handler = nc()
                 despesa.dataPagamento = dataPagamento;
             }
 
-            console.log('despesa atualizada', despesa)
-
             await DespesaModel
                 .findByIdAndUpdate(despesaID, despesa, { new: true });
             return res.status(200).json({msg: 'Despesa alterada com sucesso.'});
@@ -179,6 +176,32 @@ const handler = nc()
         }catch(e){
             console.log(e);
             return res.status(400).json({error : 'Não foi possível atualizar a despesa.'})
+        }
+    })
+    .delete(async(req : NextApiRequest, res : NextApiResponse<respostaPadrao | any>) => {
+        try{
+            const {userId, id} = req?.query;
+            const usuario = await UsuarioModel.findById(userId);
+            const despesaId = id;
+            const despesa = await DespesaModel.findById(despesaId);
+
+            if(!usuario){
+                return res.status(400).json({error: 'Usuário não encontrado.'});
+            }
+
+            if(!despesa){
+                return res.status(400).json({error: 'Despesa não encontrada.'});
+            }
+
+            await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: +despesa.valor } });
+
+            await DespesaModel
+                .findByIdAndDelete(despesaId, despesa);
+            return res.status(200).json({msg: 'Despesa excluída com sucesso.', despesa});
+
+        }catch(e){
+            console.log(e);
+            return res.status(400).json({error : 'Não foi possível deletar a despesa.'});
         }
     });
 
