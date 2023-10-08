@@ -183,26 +183,17 @@ const handler = nc()
             const user = await buscarUsuarioLogado(res, req);
 
             const receitaId = req?.query._id;
-            if(!receitaId){
-                return res.status(400).json({ error: "Id da Receita não encontrada." });
-            }
-    
-            const receita = await ReceitaModel.findById(receitaId);
-    
-            if (!receita) {
-                return res.status(400).json({ error: "Id da Receita não encontrada." });
-            }
-    
-            if(req.query._id){
-                await ReceitaModel.findByIdAndDelete(receitaId);
-            } else {
+
+            if (!receitaId) {
                 await ReceitaModel.deleteMany({ IdUsuario: user._id });
-    
+                return res.status(200).json({msg: `Todas as Receita Excluida com sucesso.`});
             }
     
+            if(req.query._id && req.query._id !== null && req.query._id !== undefined){
+                await ReceitaModel.findByIdAndDelete(receitaId);
+                return res.status(200).json({msg: `Receita Excluida com sucesso.`});
+            } 
     
-            return res.status(200).json({msg: `Receita Excluida com sucesso.`});
-         
         } catch (e) {
             console.log(e);
             return res.status(500).json({ error: "Ops! Algo deu errado ao Excluir as receitas. Por favor, tente novamente mais tarde." })
