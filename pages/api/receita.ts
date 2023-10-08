@@ -159,6 +159,14 @@ const handler = nc()
                 receita.dataRecebimento = convertedDate;
             }
 
+            if (parcelas) {
+                receita.parcelas = parcelas;
+            }
+
+            if (recorrencia) {
+                receita.recorrencia = recorrencia;
+            }
+
             await ReceitaModel.findByIdAndUpdate(receitaId, receita, { new: true });
           
             return res.status(200).json({msg: `Receita alterada com sucesso.`});
