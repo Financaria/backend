@@ -141,16 +141,22 @@ const handler = nc()
 
             if (categoria && categoria.length > minCharLength && categoria.length < maxCharLength) {
                receita.categoria = categoria;
+            } else {
+                return res.status(400).json({ error: "A categoria deve ter pelo menos 2 e no máximo 15 caracteres." });
             }
 
             if (descricao && descricao.length > minCharLength && descricao.length < maxCharLength) {
                 receita.descricao = descricao;
+            } else {
+                return res.status(400).json({ error: "A descrição deve ter pelo menos 2 e no máximo 15 caracteres." });
             }
 
             const minValue = 0;
 
             if (valor && valor > minValue) {
                receita.valor = valor;
+            } else {
+                return res.status(400).json({ error: "O valor deve ser maior que zero." });
             }
 
             if (dataRecebimento) {
@@ -187,12 +193,12 @@ const handler = nc()
             if (!receitaId) {
                 await ReceitaModel.deleteMany({ IdUsuario: user._id });
                 return res.status(200).json({msg: `Todas as Receita Excluida com sucesso.`});
-            }
+            };
     
             if(req.query._id && req.query._id !== null && req.query._id !== undefined){
                 await ReceitaModel.findByIdAndDelete(receitaId);
                 return res.status(200).json({msg: `Receita Excluida com sucesso.`});
-            } 
+            };
     
         } catch (e) {
             console.log(e);
@@ -204,10 +210,9 @@ const handler = nc()
 
 async function buscarUsuarioLogado(res : NextApiResponse, req : NextApiRequest){
     const user = await UsuarioModel.findById(req.query.userId);
-
             if (!user) {
                 return res.status(400).json({ error: "Usuário não encontrado." });
-            }
+            };
     return user;
 }
 
