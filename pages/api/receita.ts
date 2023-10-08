@@ -177,8 +177,39 @@ const handler = nc()
         
         }
       
-      });
-//.delete()
+      })
+    .delete(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao>) => {
+        try {
+            const user = await buscarUsuarioLogado(res, req);
+
+            const receitaId = req?.query._id;
+            if(!receitaId){
+                return res.status(400).json({ error: "Id da Receita não encontrada." });
+            }
+    
+            const receita = await ReceitaModel.findById(receitaId);
+    
+            if (!receita) {
+                return res.status(400).json({ error: "Id da Receita não encontrada." });
+            }
+    
+            if(req.query._id){
+                await ReceitaModel.findByIdAndDelete(receitaId);
+            } else {
+                await ReceitaModel.deleteMany({ IdUsuario: user._id });
+    
+            }
+    
+    
+            return res.status(200).json({msg: `Receita Excluida com sucesso.`});
+         
+        } catch (e) {
+            console.log(e);
+            return res.status(500).json({ error: "Ops! Algo deu errado ao Excluir as receitas. Por favor, tente novamente mais tarde." })
+        }
+
+
+    });
 
 async function buscarUsuarioLogado(res : NextApiResponse, req : NextApiRequest){
     const user = await UsuarioModel.findById(req.query.userId);
