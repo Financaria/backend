@@ -11,11 +11,7 @@ const handler = nc()
     .post(async (req: NextApiRequest, res: NextApiResponse<respostaPadrao>) => {
         try {
             const {userId} = req?.query;
-            const user = await UsuarioModel.findById(userId);
-
-            if (!user) {
-                return res.status(400).json({ error: "Usuário não encontrado." });
-            }
+            const user = await buscarUsuarioLogado(res, req);
 
             if (!req || !req.body) {
                 return res.status(400).json({ error: "O corpo da solicitação é obrigatório." });
@@ -89,11 +85,7 @@ const handler = nc()
 
         try {
             
-            const user = await UsuarioModel.findById(req.query.userId);
-
-            if (!user) {
-                return res.status(400).json({ error: "Usuário não encontrado." });
-            }
+            const user = await buscarUsuarioLogado(res, req);
         
             const todasAsReceitas = await ReceitaModel.find({
                 IdUsuario: user._id
@@ -122,9 +114,72 @@ const handler = nc()
         // buscar as receitar por ano especifico(vou ter que tratar a data de recebimento)
         // validar
 
-    });
-// .put()
+    })
+    .put(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao>) => {
+        try {
+
+            const user = await buscarUsuarioLogado(res, req);
+
+            const receitaId = req?.query._id;
+            const receita = await ReceitaModel.findById(receitaId);
+
+            if (!receita) {
+                return res.status(400).json({ error: "Id da Receita não encontrada." });
+            }
+
+            const {
+                descricao,
+                categoria,
+                valor,
+                dataRecebimento,
+                parcelas,
+                recorrencia
+            } = req?.body;
+
+            const minCharLength = 1;
+            const maxCharLength = 16;
+
+            if (categoria && categoria.length > minCharLength && categoria.length < maxCharLength) {
+               receita.categoria = categoria;
+            }
+
+            if (descricao && descricao.length > minCharLength && descricao.length < maxCharLength) {
+                receita.descricao = descricao;
+            }
+
+            const minValue = 0;
+
+            if (valor && valor > minValue) {
+               receita.valor = valor;
+            }
+
+            if (dataRecebimento) {
+                const convertedDate = convertDate(dataRecebimento);
+
+                receita.dataRecebimento = convertedDate;
+            }
+
+            await ReceitaModel.findByIdAndUpdate(receitaId, receita, { new: true });
+          
+            return res.status(200).json({msg: `Receita alterada com sucesso.`});
+    
+        } catch (e) {
+            console.log(e);
+            return res.status(500).json({ error: "Ops! Algo deu errado ao atualizar as receitas. Por favor, tente novamente mais tarde." })
+        
+        }
+      
+      });
 //.delete()
+
+async function buscarUsuarioLogado(res : NextApiResponse, req : NextApiRequest){
+    const user = await UsuarioModel.findById(req.query.userId);
+
+            if (!user) {
+                return res.status(400).json({ error: "Usuário não encontrado." });
+            }
+    return user;
+}
 
 function convertDate(dataString: string) {
     
