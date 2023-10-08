@@ -104,16 +104,6 @@ const handler = nc()
             console.log(e);
             return res.status(500).json({ error: "Ops! Algo deu errado ao buscar as receitas. Por favor, tente novamente mais tarde." })
         }
-
-        // buscar as receitar por categoria
-        // validar
-        // buscar as receitar por nome
-        // validar
-        // buscar as receitar por mês especifico(vou ter que tratar a data de recebimento)
-        // validar
-        // buscar as receitar por ano especifico(vou ter que tratar a data de recebimento)
-        // validar
-
     })
     .put(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao>) => {
         try {
