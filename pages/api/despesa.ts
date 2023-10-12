@@ -65,7 +65,7 @@ const handler = nc()
         }
         return res.status(400).json({error: 'Erro ao cadastrar despesa.'}); 
     })
-    .get(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao | any[]>) => {
+    .get(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao | any>) => {
         try{
             const {userId} = req?.query;
             const usuario = await UsuarioModel.findById(userId);
@@ -77,13 +77,19 @@ const handler = nc()
             const {filtro} = req?.query;
             if(filtro){
                 //buscar no banco as despesas do usuário que contenham a descricao ou categoria igual ao filtro.
-                const despesaEncontrada = await DespesaModel.find({
+                const despesasEncontradas = await DespesaModel.find({
                     $or: [{ descricao: {$regex : filtro, $options : 'i'}},
                     { categoria: {$regex: filtro, $options : 'i'}
                     }],
                     $and: [{idUsuario : usuario._id}]
-                })
-                return res.status(200).json(despesaEncontrada);
+                });
+
+                const somaDespesasFiltro = despesasEncontradas.reduce((total, despesa) => total + despesa.valor, 0);
+
+                return res.status(200).json({
+                    despesas: despesasEncontradas,
+                    total: somaDespesasFiltro  // Adiciona o total ao JSON de resposta
+                });
             }
 
             const {mes} = req?.query;
@@ -111,20 +117,35 @@ const handler = nc()
                     }],
                     $and: [{idUsuario : usuario._id}]            
                 });
-                return res.status(200).json(despesasMes);
+
+                 // Calcular a soma dos valores das despesas do mês alvo
+                const somaDespesasMes = despesasMes.reduce((total, despesa) => total + despesa.valor, 0);
+
+                return res.status(200).json({
+                    despesas: despesasMes,
+                    total: somaDespesasMes  // Adiciona o total ao JSON de resposta
+                });
+
+                //return res.status(200).json(despesasMes);
             }
 
             const {data} = req?.query;
             if(data){
                 //buscar no banco todas as despesas do usuário na data informada.
-                const despesaData = await DespesaModel.find({
+                const despesasData = await DespesaModel.find({
                     $or: [
                         { dataVencimento: data },
                         { dataPagamento: data }
                     ],
                     $and: [{idUsuario : usuario._id}]
-                })
-                return res.status(200).json(despesaData);
+                });
+
+                const somaDespesasData = despesasData.reduce((total, despesa) => total + despesa.valor, 0);
+
+                return res.status(200).json({
+                    despesas: despesasData,
+                    total: somaDespesasData  // Adiciona o total ao JSON de resposta
+                });
             }
 
             if(!filtro || !mes || !data){
