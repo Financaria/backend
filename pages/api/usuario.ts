@@ -12,7 +12,7 @@ const handler = nc()
     .get(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao | any>) => {
         try{
             const {userId} = req?.query;
-            const  usuario = await UsuarioModel.findById(userId);
+            const usuario = await UsuarioModel.findById(userId);
             usuario.senha = null
             return res.status(200).json(usuario);
         }catch(e){
