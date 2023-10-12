@@ -22,7 +22,7 @@ const handler = nc()
                 return res.status(400).json({error : 'Parâmetros de entrada não informados.'});
             }
 
-            const {descricao, categoria, valor, dataVencimento, dataPagamento, parcelas, recorrencia} = req?.body;
+            const {descricao, categoria, valor, dataVencimento, dataPagamento, pago, parcelas, recorrencia} = req?.body;
 
             if(!descricao || descricao.length < 2){
                 return res.status(400).json({error : 'Descrição não é válida.'});
@@ -36,6 +36,10 @@ const handler = nc()
                 return res.status(400).json({error : 'É necessário informar a data de vencimento.'});
             }
 
+            if(pago === undefined){
+                return res.status(400).json({error : 'Informe se a despesa está paga ou não.'});
+            }
+
             const despesa = {
                 idUsuario : usuario._id,
                 descricao,
@@ -44,11 +48,14 @@ const handler = nc()
                 dataVencimento,
                 dataPagamento,
                 dataInclusao : new Date(),
+                pago,
                 parcelas,
                 recorrencia
             }
             
-            await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: -despesa.valor } });
+            if(pago) {
+                await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: -despesa.valor } });
+            }
 
             await DespesaModel.create(despesa);
             return res.status(201).json({ msg: 'Despesa cadastrada com sucesso.' });
@@ -147,7 +154,7 @@ const handler = nc()
                 return res.status(400).json({error: 'Despesa não encontrada.'});
             }
 
-            const { descricao, categoria, valor, dataVencimento, dataPagamento } = req?.body;
+            const { descricao, categoria, valor, dataVencimento, dataPagamento, pago } = req?.body;
 
             if(descricao && descricao.length > 2){
                 despesa.descricao = descricao;
@@ -169,6 +176,18 @@ const handler = nc()
                 despesa.dataPagamento = dataPagamento;
             }
 
+            if (pago === undefined) {
+                // Se o campo pago não foi alterado, não faz nada...
+              } else {
+                if (pago === false) {
+                  // A despesa foi marcada como não paga, então aumenta o saldo.
+                  await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: +despesa.valor } });
+                } else {
+                  // A despesa foi marcada como paga, então diminui o saldo
+                  await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: -despesa.valor } });
+                }
+              }
+              
             await DespesaModel
                 .findByIdAndUpdate(despesaID, despesa, { new: true });
             return res.status(200).json({msg: 'Despesa alterada com sucesso.'});

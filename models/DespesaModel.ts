@@ -8,6 +8,7 @@ const DespesaSchema = new Schema({
     dataVencimento : {type : Date, required : true},
     dataPagamento : {type : Date, required : true},
     dataInclusao : {type : Date, required : true},
+    pago: {type : Boolean, required : true},
     parcelas : {type : Number, required : true}, // default : 0
     recorrencia : {type : Boolean, required : true} // default : false
 });
