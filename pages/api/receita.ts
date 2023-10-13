@@ -81,19 +81,31 @@ const handler = nc()
             return res.status(500).json({ error: "Ocorreu um erro ao criar a receita." })
         }
     })
-    .get(async (req: NextApiRequest, res: NextApiResponse<respostaPadrao | any[]>)  => {
+    .get(async (req: NextApiRequest, res: NextApiResponse<respostaPadrao | any[] | any>)  => {
 
         try {
-            
-            const user = await buscarUsuarioLogado(res, req);
-        
+            const {userId} = req?.query;
+            const user = await UsuarioModel.findById(userId);
+            if (!user) {
+                return res.status(400).json({ error: "Usuário não encontrado." });
+            };
+            console.log(user);
+
+            const {filtro} = req?.query;
+            console.log(filtro);
+
+            if (filtro) {
+                const filtroString = Array.isArray(filtro) ? filtro[0] : filtro;
+                const receitasEncontradas = await buscarReceitaPorFiltro(req, res, user, filtroString);
+                return res.status(200).json({ receitasEncontradas });
+            }
+
             const todasAsReceitas = await ReceitaModel.find({
                 IdUsuario: user._id
             }).sort({
                 dataRecebimento : 1
             });
 
-            
             if(todasAsReceitas.length === 0){
                 return res.status(400).json({ error: "Nenhuma receita encontrada para este usuário." });
             }
@@ -197,6 +209,22 @@ const handler = nc()
 
 
     });
+
+async function buscarReceitaPorFiltro(req: NextApiRequest, res: NextApiResponse, user: any, filtro: string) {
+    try {
+        const regex = new RegExp(`^${filtro}$`, 'i');
+        const receitasEncontradas = await ReceitaModel.find({
+            $and: [
+                { $or: [{ descricao: regex }, { categoria: regex }] },
+                { IdUsuario: user._id }
+            ]
+        });
+        return res.status(200).json({ receitasEncontradas });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: 'Ops! Algo deu errado ao buscar as receitas. Por favor, tente novamente mais tarde.' });
+    }
+}
 
 async function buscarUsuarioLogado(res : NextApiResponse, req : NextApiRequest){
     const user = await UsuarioModel.findById(req.query.userId);
