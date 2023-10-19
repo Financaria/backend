@@ -94,6 +94,37 @@ const handler = nc()
                 return res.status(200).json({ receitasEncontradas });
             }
 
+            const {mes} = req?.query;
+            if(mes){
+                //buscar no banco todas as despesas do usuário do mês selecionado (vencimento e/ou pagamento).
+                const mesAlvo = parseInt(mes.toString());
+                console.log("mês", mesAlvo)
+                const anoAlvo = new Date().getFullYear();
+                console.log("ano", anoAlvo)
+
+                const receitaMes = await ReceitaModel.find({
+                    $and: [{
+                        $or: [{
+                            $expr: {
+                                $and: [
+                                    { $eq: [{ $year: '$dataRecebimento' }, anoAlvo]},
+                                    { $eq: [{ $month: '$dataRecebimento' }, mesAlvo]}
+                                ]
+                            }
+                        }],
+                    IdUsuario : user._id}]
+                });
+
+                 // Calcular a soma dos valores das despesas do mês alvo
+                const somaReceitasMes = receitaMes.reduce((total, receita) => total + receita.valor, 0);
+                console.log(receitaMes);
+
+                return res.status(200).json({
+                    receita: receitaMes,
+                    total: somaReceitasMes  // Adiciona o total ao JSON de resposta
+                });
+            }
+            
             const todasAsReceitas = await ReceitaModel.find({
                 IdUsuario: user._id
             }).sort({
