@@ -152,10 +152,10 @@ const handler = nc()
     })
     .put(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao>) => {
         try {
-
+            const {userId, id} = req?.query;
             const user = await buscarUsuarioLogado(res, req);
 
-            const receitaId = req?.query._id;
+            const receitaId = id;
             const receita = await ReceitaModel.findById(receitaId);
 
             if (!receita) {
@@ -167,6 +167,7 @@ const handler = nc()
                 categoria,
                 valor,
                 dataRecebimento,
+                recebido,
                 parcelas,
                 recorrencia
             } = req?.body;
@@ -174,24 +175,18 @@ const handler = nc()
             const minCharLength = 1;
             const maxCharLength = 16;
 
-            if (categoria && categoria.length > minCharLength && categoria.length < maxCharLength) {
+            if (categoria && categoria.length > 2) {
                receita.categoria = categoria;
-            } else {
-                return res.status(400).json({ error: "A categoria deve ter pelo menos 2 e no máximo 15 caracteres." });
             }
 
-            if (descricao && descricao.length > minCharLength && descricao.length < maxCharLength) {
+            if (descricao && descricao.length > 2) {
                 receita.descricao = descricao;
-            } else {
-                return res.status(400).json({ error: "A descrição deve ter pelo menos 2 e no máximo 15 caracteres." });
             }
 
             const minValue = 0;
 
             if (valor && valor > minValue) {
                receita.valor = valor;
-            } else {
-                return res.status(400).json({ error: "O valor deve ser maior que zero." });
             }
 
             if (dataRecebimento) {
@@ -208,8 +203,19 @@ const handler = nc()
                 receita.recorrencia = recorrencia;
             }
 
+            if (recebido === undefined) {
+                // Se o campo recebido não foi alterado, não faz nada...
+            } else {
+                if (recebido === false) {
+                    // A receita foi marcada como NÃO recebida, então diminui o saldo.
+                    await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: -receita.valor } });
+                } else {
+                    // A receita foi marcada como recebida, então aumenta o saldo
+                    await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: +receita.valor } });
+                }
+            }
+
             await ReceitaModel.findByIdAndUpdate(receitaId, receita, { new: true });
-          
             return res.status(200).json({msg: `Receita alterada com sucesso.`});
     
         } catch (e) {

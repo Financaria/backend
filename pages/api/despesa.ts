@@ -125,8 +125,6 @@ const handler = nc()
                     despesas: despesasMes,
                     total: somaDespesasMes  // Adiciona o total ao JSON de resposta
                 });
-
-                //return res.status(200).json(despesasMes);
             }
 
             const {data} = req?.query;
@@ -199,15 +197,15 @@ const handler = nc()
 
             if (pago === undefined) {
                 // Se o campo pago não foi alterado, não faz nada...
-              } else {
+            } else {
                 if (pago === false) {
-                  // A despesa foi marcada como não paga, então aumenta o saldo.
-                  await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: +despesa.valor } });
+                    // A despesa foi marcada como não paga, então aumenta o saldo.
+                    await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: +despesa.valor } });
                 } else {
-                  // A despesa foi marcada como paga, então diminui o saldo
-                  await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: -despesa.valor } });
+                    // A despesa foi marcada como paga, então diminui o saldo
+                    await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: -despesa.valor } });
                 }
-              }
+            }
               
             await DespesaModel
                 .findByIdAndUpdate(despesaID, despesa, { new: true });
