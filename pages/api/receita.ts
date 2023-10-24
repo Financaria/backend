@@ -22,6 +22,7 @@ const handler = nc()
                 categoria,
                 valor,
                 dataRecebimento,
+                recebido,
                 parcelas,
                 recorrencia
             } = req?.body;
@@ -48,6 +49,10 @@ const handler = nc()
 
             }
 
+            if(recebido === undefined){
+                return res.status(400).json({error : 'Informe se a despesa está paga ou não.'});
+            }
+
             const convertedDate = convertDate(dataRecebimento);
 
             const existingRevenue = await ReceitaModel.findOne({
@@ -66,14 +71,16 @@ const handler = nc()
                 valor,
                 dataInclusao: new Date(),
                 dataRecebimento: convertedDate,
+                recebido,
                 parcelas,
                 recorrencia
             });
 
-            await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: +receita.valor } });
+            if(recebido) {
+                await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: +receita.valor } });
+            }
 
             await receita.save();
-            
             return res.status(200).json({ msg: "Receita cadastrada com sucesso!" })
 
         } catch (e) {
@@ -112,7 +119,8 @@ const handler = nc()
                                 ]
                             }
                         }],
-                    IdUsuario : user._id}]
+                        IdUsuario : user._id
+                    }]
                 });
 
                  // Calcular a soma dos valores das despesas do mês alvo
