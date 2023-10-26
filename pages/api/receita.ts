@@ -95,6 +95,7 @@ const handler = nc()
             const {userId} = req?.query;
             const user = await UsuarioModel.findById(userId);
             //const user = await buscarUsuarioLogado(res, req);
+            const moment = require('moment');
 
             const { filtro } = req?.query;
             if (filtro) {
@@ -135,24 +136,30 @@ const handler = nc()
                 });
             }
             
-            const {data} = req?.query;
+            const { data } = req?.query;
+            //const formattedDate = moment(data, 'DD-MM-YYYY').startOf('day'); // Converte para objeto de data moment ajustado para 00:00:00
+            const formattedDate = moment.utc(data, 'YYYY-MM-DD').startOf('day'); 
+
             if(data){
                 //buscar no banco todas as receitas do usuário na data informada.
-                const receitasData = await ReceitaModel.find({
-                    $or: [
-                        { dataRecebimento: data },
-                        { dataInclusao: data }
-                    ],
-                    $and: [{IdUsuario : user._id}]
+                const receitasData = await ReceitaModel.find({ 
+                    //$and: [{ dataRecebimento: data }, { IdUsuario: user._id }]
+                    $and: [
+                        { dataRecebimento: { $gte: formattedDate.toDate(), $lt: formattedDate.clone().add(1, 'day').toDate() } },
+                        { IdUsuario: user._id }
+                    ]
+
                 });
                 console.log("Data:", data);
                 console.log("Usuário:", user);
+                console.log("Usuário:", user._id);
                 console.log("Receitas:", receitasData);
 
-                const somaReceitasData = receitasData.reduce((total, receita) => total + receita.valor, 0);
+                //const somaReceitasData = receitasData.reduce((total, receita) => total + receita.valor, 0);
+                const somaReceitasData = receitasData.reduce((total, receita) => total + parseFloat(receita.valor), 0);
 
                 return res.status(200).json({
-                    despesas: receitasData,
+                    receitas: receitasData,
                     total: somaReceitasData  // Adiciona o total ao JSON de resposta
                 });
             }
