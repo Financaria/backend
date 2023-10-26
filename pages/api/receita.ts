@@ -93,7 +93,8 @@ const handler = nc()
 
         try {
             const {userId} = req?.query;
-            const user = await buscarUsuarioLogado(res, req);
+            const user = await UsuarioModel.findById(userId);
+            //const user = await buscarUsuarioLogado(res, req);
 
             const { filtro } = req?.query;
             if (filtro) {
@@ -138,8 +139,11 @@ const handler = nc()
             if(data){
                 //buscar no banco todas as receitas do usuário na data informada.
                 const receitasData = await ReceitaModel.find({
-                    $and: [{ dataRecebimento: data}], 
-                    $and: [{ IdUsuario : user._id }]
+                    $or: [
+                        { dataRecebimento: data },
+                        { dataInclusao: data }
+                    ],
+                    $and: [{IdUsuario : user._id}]
                 });
                 console.log("Data:", data);
                 console.log("Usuário:", user);
@@ -246,27 +250,42 @@ const handler = nc()
         
         }
       
-      })
-    .delete(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao>) => {
+    })
+    .delete(async (req : NextApiRequest, res : NextApiResponse<respostaPadrao | any>) => {
         try {
+            const {userId, id} = req?.query;
             const user = await buscarUsuarioLogado(res, req);
+            const receitaId = id;
+            const receita = await ReceitaModel.findById(receitaId);
+            const jaRecebido = receita.recebido;
 
-            const receitaId = req?.query._id;
+            if (!receita) {
+                //await ReceitaModel.deleteMany({ IdUsuario: user._id });
+                //return res.status(200).json({msg: `Todas as Receita Excluida com sucesso.`});
+                return res.status(400).json({error: 'Despesa não encontrada.'});
 
-            if (!receitaId) {
-                await ReceitaModel.deleteMany({ IdUsuario: user._id });
-                return res.status(200).json({msg: `Todas as Receitas Excluídas com sucesso.`});
             };
     
-            if(req.query._id && req.query._id !== null && req.query._id !== undefined){
-                await ReceitaModel.findByIdAndDelete(receitaId);
-                return res.status(200).json({msg: `Receita Excluída com sucesso.`});
-            };
+            //if(req.query._id && req.query._id !== null && req.query._id !== undefined){
+            //    await ReceitaModel.findByIdAndDelete(receitaId);
+            //    return res.status(200).json({msg: `Receita Excluida com sucesso.`});
+            //};
+
+            if (jaRecebido) {
+                // A receita estava marcada como RECEBIDA, então altera o saldo, diminuindo o valor da receita.
+                await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: -receita.valor } });
+            }
+
+            await ReceitaModel
+                .findByIdAndDelete(receitaId, receita);
+            return res.status(200).json({msg: 'Receita excluída com sucesso.', receita});
     
         } catch (e) {
             console.log(e);
             return res.status(500).json({ error: "Ops! Algo deu errado ao Excluir as receitas. Por favor, tente novamente mais tarde." })
         }
+
+
     });
 
 async function buscarReceitaPorFiltro(req: NextApiRequest, res: NextApiResponse, user: any, filtro: string) {
