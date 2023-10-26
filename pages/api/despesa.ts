@@ -129,7 +129,6 @@ const handler = nc()
             }
 
             const {data} = req?.query;
-            //const dataFormatada = moment.tz(data, 'DD-MM-YYYY').startOf('day'); // Converte para objeto de data moment ajustado para 00:00:00
             const dataFormatada = moment.utc(data, 'DD-MM-YYYY', 'UTC').startOf('day'); 
             // Converte para objeto de data moment ajustado para 00:00:00 (UTC)
 
@@ -148,18 +147,7 @@ const handler = nc()
                         { idUsuario: usuario._id }
                     ]
 
-                    //$or: [
-                    //    //{ dataRecebimento: { $eq: dataFormatada.toDate() } }, // Igual à data de dataFormatada
-                    //    { dataVencimento: {$eq: dataFormatada.toDate() } },
-                    //    { dataPagamento: {$eq: dataFormatada.toDate() } }
-                    //],
-                    //$and: [{idUsuario : usuario._id}]
                 });
-
-                console.log("Data:", data, dataFormatada);
-                console.log("Usuário:", usuario);
-                console.log("Usuário:", usuario._id);
-                console.log("Receitas:", despesasData);
 
                 const somaDespesasData = despesasData.reduce((total, despesa) => total + despesa.valor, 0);
 
