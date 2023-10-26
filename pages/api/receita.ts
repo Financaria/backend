@@ -46,7 +46,6 @@ const handler = nc()
 
             if (!dataRecebimento) {
                 return res.status(400).json({ error: 'É necessário informar a data de recebimento.' });
-
             }
 
             if(recebido === undefined){
@@ -55,6 +54,7 @@ const handler = nc()
 
             const convertedDate = convertDate(dataRecebimento);
 
+            // Creio que não precisa dessa checagem, pois podemos ter várias receitas com a mesma descrição, sem problemas.
             const existingRevenue = await ReceitaModel.findOne({
                 IdUsuario: user._id,
                 descricao: descricao
@@ -63,6 +63,7 @@ const handler = nc()
             if (existingRevenue) {
                 return res.status(400).json({ error: "Já existe uma receita com a mesmo descricao." });
             }
+            // Até aqui.
 
             const receita = new ReceitaModel({
                 IdUsuario: user._id,
@@ -91,10 +92,10 @@ const handler = nc()
     .get(async (req: NextApiRequest, res: NextApiResponse<respostaPadrao | any[] | any>)  => {
 
         try {
-            const { filtro } = req?.query;
-
+            const {userId} = req?.query;
             const user = await buscarUsuarioLogado(res, req);
 
+            const { filtro } = req?.query;
             if (filtro) {
                 const filtroString = Array.isArray(filtro) ? filtro[0] : filtro;
                 const receitasEncontradas = await buscarReceitaPorFiltro(req, res, user, filtroString);
@@ -123,7 +124,7 @@ const handler = nc()
                     }]
                 });
 
-                 // Calcular a soma dos valores das despesas do mês alvo
+                // Calcular a soma dos valores das despesas do mês alvo
                 const somaReceitasMes = receitaMes.reduce((total, receita) => total + receita.valor, 0);
                 console.log(receitaMes);
 
@@ -133,17 +134,38 @@ const handler = nc()
                 });
             }
             
-            const todasAsReceitas = await ReceitaModel.find({
-                IdUsuario: user._id
-            }).sort({
-                dataRecebimento : 1
-            });
+            const {data} = req?.query;
+            if(data){
+                //buscar no banco todas as receitas do usuário na data informada.
+                const receitasData = await ReceitaModel.find({
+                    $and: [{ dataRecebimento: data}], 
+                    $and: [{ IdUsuario : user._id }]
+                });
+                console.log("Data:", data);
+                console.log("Usuário:", user);
+                console.log("Receitas:", receitasData);
 
-            if(todasAsReceitas.length === 0){
-                return res.status(400).json({ error: "Nenhuma receita encontrada para este usuário." });
+                const somaReceitasData = receitasData.reduce((total, receita) => total + receita.valor, 0);
+
+                return res.status(200).json({
+                    despesas: receitasData,
+                    total: somaReceitasData  // Adiciona o total ao JSON de resposta
+                });
             }
 
-            return res.status(200).json(todasAsReceitas);
+            if(!filtro || !mes || !data){
+                const todasAsReceitas = await ReceitaModel.find({
+                    IdUsuario: user._id
+                }).sort({
+                    dataRecebimento : 1
+                });
+    
+                if(todasAsReceitas.length === 0){
+                    return res.status(400).json({ error: "Nenhuma receita encontrada para este usuário." });
+                }
+    
+                return res.status(200).json(todasAsReceitas);
+            }
 
         } catch (e) {
             console.log(e);
@@ -233,20 +255,18 @@ const handler = nc()
 
             if (!receitaId) {
                 await ReceitaModel.deleteMany({ IdUsuario: user._id });
-                return res.status(200).json({msg: `Todas as Receita Excluida com sucesso.`});
+                return res.status(200).json({msg: `Todas as Receitas Excluídas com sucesso.`});
             };
     
             if(req.query._id && req.query._id !== null && req.query._id !== undefined){
                 await ReceitaModel.findByIdAndDelete(receitaId);
-                return res.status(200).json({msg: `Receita Excluida com sucesso.`});
+                return res.status(200).json({msg: `Receita Excluída com sucesso.`});
             };
     
         } catch (e) {
             console.log(e);
             return res.status(500).json({ error: "Ops! Algo deu errado ao Excluir as receitas. Por favor, tente novamente mais tarde." })
         }
-
-
     });
 
 async function buscarReceitaPorFiltro(req: NextApiRequest, res: NextApiResponse, user: any, filtro: string) {
