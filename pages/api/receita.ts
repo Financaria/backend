@@ -6,6 +6,7 @@ import { conectarMongoDB } from "@/middlewares/conectarMongoDB";
 import { validarToken } from "@/middlewares/validateTokenJWT";
 import moment, { months } from "moment";
 import nc from 'next-connect';
+import { CORSPolicy } from "../../middlewares/CORSpolicy";
 
 const handler = nc()
     .post(async (req: NextApiRequest, res: NextApiResponse<respostaPadrao>) => {
@@ -324,4 +325,4 @@ function convertDate(dataString: string) {
 
 }
 
-export default validarToken(conectarMongoDB(handler));
+export default CORSPolicy(validarToken(conectarMongoDB(handler)));
