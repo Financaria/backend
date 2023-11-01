@@ -44,7 +44,7 @@ export const validarToken = (handler : NextApiHandler) => (req : NextApiRequest,
 
             //A propriedade userId está sendo adicionada ao objeto req.query, se ela ainda não existir. Se já existir, seu valor será atualizado com o valor de decoded._id.
             req.query.userId = decoded._id;
-        
+            
         }
     
         
