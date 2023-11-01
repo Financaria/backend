@@ -130,8 +130,8 @@ const handler = nc()
                 //buscar no banco todas as receitas do usuário na data informada.
                 const receitasData = await ReceitaModel.find({ 
                     $and: [
-                        { dataRecebimento: { $eq: dataFormatada.toDate() } }, // Igual à data de dataFormatada
-                        { IdUsuario: user._id } // Corresponde ao IdUsuario fornecido pelo usuário
+                        { dataRecebimento: { $eq: dataFormatada.toDate() } },
+                        { IdUsuario: user._id }
                     ]
                     
                 });
@@ -140,7 +140,7 @@ const handler = nc()
 
                 return res.status(200).json({
                     receitas: receitasData,
-                    total: somaReceitasData  // Adiciona o total ao JSON de resposta
+                    total: somaReceitasData 
                 });
             }
 
