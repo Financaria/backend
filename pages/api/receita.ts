@@ -55,17 +55,7 @@ const handler = nc()
 
             const convertedDate = convertDate(dataRecebimento);
 
-            // Creio que não precisa dessa checagem, pois podemos ter várias receitas com a mesma descrição, sem problemas.
-            const existingRevenue = await ReceitaModel.findOne({
-                IdUsuario: user._id,
-                descricao: descricao
-            });
-
-            if (existingRevenue) {
-                return res.status(400).json({ error: "Já existe uma receita com a mesmo descricao." });
-            }
-            // Até aqui.
-
+            
             const receita = new ReceitaModel({
                 IdUsuario: user._id,
                 descricao: descricao,
@@ -96,16 +86,15 @@ const handler = nc()
             const {userId} = req?.query;
             const user = await buscarUsuarioLogado(res, req);
 
-            const { filtro } = req?.query;
+            const { filtro, mes, data } = req?.query;
+
             if (filtro) {
                 const filtroString = Array.isArray(filtro) ? filtro[0] : filtro;
                 const receitasEncontradas = await buscarReceitaPorFiltro(req, res, user, filtroString);
                 return res.status(200).json({ receitasEncontradas });
             }
 
-            const {mes} = req?.query;
             if(mes){
-                //buscar no banco todas as despesas do usuário do mês selecionado (vencimento e/ou pagamento).
                 const mesAlvo = parseInt(mes.toString());
                 console.log("mês", mesAlvo)
                 const anoAlvo = new Date().getFullYear();
@@ -135,7 +124,6 @@ const handler = nc()
                 });
             }
             
-            const { data } = req?.query;
             const dataFormatada = moment(data, 'DD-MM-YYYY').startOf('day'); // Converte para objeto de data moment ajustado para 00:00:00
 
             if(data){
