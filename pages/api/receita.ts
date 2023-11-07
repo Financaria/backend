@@ -6,6 +6,7 @@ import { conectarMongoDB } from "@/middlewares/conectarMongoDB";
 import { validarToken } from "@/middlewares/validateTokenJWT";
 import moment, { months } from "moment";
 import nc from 'next-connect';
+import { CORSPolicy } from "../../middlewares/CORSpolicy";
 
 const handler = nc()
     .post(async (req: NextApiRequest, res: NextApiResponse<respostaPadrao>) => {
@@ -54,17 +55,7 @@ const handler = nc()
 
             const convertedDate = convertDate(dataRecebimento);
 
-            // Creio que não precisa dessa checagem, pois podemos ter várias receitas com a mesma descrição, sem problemas.
-            const existingRevenue = await ReceitaModel.findOne({
-                IdUsuario: user._id,
-                descricao: descricao
-            });
-
-            if (existingRevenue) {
-                return res.status(400).json({ error: "Já existe uma receita com a mesmo descricao." });
-            }
-            // Até aqui.
-
+            
             const receita = new ReceitaModel({
                 IdUsuario: user._id,
                 descricao: descricao,
@@ -92,19 +83,19 @@ const handler = nc()
     .get(async (req: NextApiRequest, res: NextApiResponse<respostaPadrao | any[] | any>)  => {
 
         try {
-            const {userId} = req?.query;
+
             const user = await buscarUsuarioLogado(res, req);
 
-            const { filtro } = req?.query;
+            const { filtro, mes, data } = req?.query;
+
+            
             if (filtro) {
                 const filtroString = Array.isArray(filtro) ? filtro[0] : filtro;
                 const receitasEncontradas = await buscarReceitaPorFiltro(req, res, user, filtroString);
                 return res.status(200).json({ receitasEncontradas });
             }
 
-            const {mes} = req?.query;
             if(mes){
-                //buscar no banco todas as despesas do usuário do mês selecionado (vencimento e/ou pagamento).
                 const mesAlvo = parseInt(mes.toString());
                 console.log("mês", mesAlvo)
                 const anoAlvo = new Date().getFullYear();
@@ -134,15 +125,14 @@ const handler = nc()
                 });
             }
             
-            const { data } = req?.query;
             const dataFormatada = moment(data, 'DD-MM-YYYY').startOf('day'); // Converte para objeto de data moment ajustado para 00:00:00
 
             if(data){
                 //buscar no banco todas as receitas do usuário na data informada.
                 const receitasData = await ReceitaModel.find({ 
                     $and: [
-                        { dataRecebimento: { $eq: dataFormatada.toDate() } }, // Igual à data de dataFormatada
-                        { IdUsuario: user._id } // Corresponde ao IdUsuario fornecido pelo usuário
+                        { dataRecebimento: { $eq: dataFormatada.toDate() } },
+                        { IdUsuario: user._id }
                     ]
                     
                 });
@@ -151,7 +141,7 @@ const handler = nc()
 
                 return res.status(200).json({
                     receitas: receitasData,
-                    total: somaReceitasData  // Adiciona o total ao JSON de resposta
+                    total: somaReceitasData 
                 });
             }
 
@@ -253,7 +243,27 @@ const handler = nc()
             const receitaId = id;
             const receita = await ReceitaModel.findById(receitaId);
             const jaRecebido = receita.recebido;
+            
+            if (!receita) {
+                //await ReceitaModel.deleteMany({ IdUsuario: user._id });
+                //return res.status(200).json({msg: `Todas as Receita Excluida com sucesso.`});
+                return res.status(400).json({error: 'Despesa não encontrada.'});
 
+            };
+    
+            //if(req.query._id && req.query._id !== null && req.query._id !== undefined){
+            //    await ReceitaModel.findByIdAndDelete(receitaId);
+            //    return res.status(200).json({msg: `Receita Excluida com sucesso.`});
+            //};
+
+            if (jaRecebido) {
+                // A receita estava marcada como RECEBIDA, então altera o saldo, diminuindo o valor da receita.
+                await UsuarioModel.findOneAndUpdate({ _id: userId }, { $inc: { saldo: -receita.valor } });
+            }
+
+            await ReceitaModel
+                .findByIdAndDelete(receitaId, receita);
+            return res.status(200).json({msg: 'Receita excluída com sucesso.', receita});
             if (!receita) {
                 //await ReceitaModel.deleteMany({ IdUsuario: user._id });
                 //return res.status(200).json({msg: `Todas as Receita Excluida com sucesso.`});
@@ -324,4 +334,4 @@ function convertDate(dataString: string) {
 
 }
 
-export default validarToken(conectarMongoDB(handler));
+export default CORSPolicy(validarToken(conectarMongoDB(handler)));
