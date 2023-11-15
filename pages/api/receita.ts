@@ -27,7 +27,7 @@ const handler = nc()
             } = req?.body;
 
             const minCharLength = 2;
-            const maxCharLength = 15;
+            const maxCharLength = 30;
 
             if (!categoria || categoria.length < minCharLength || categoria.length > maxCharLength) {
                 return res.status(400).json({ error: "A categoria deve ter pelo menos 2 e no máximo 15 caracteres." });
