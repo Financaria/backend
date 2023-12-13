@@ -9,7 +9,7 @@ export const validarToken = (handler : NextApiHandler) => (req : NextApiRequest,
         const { JWT_PRIVATE_KEY } = process.env;
 
         if(!JWT_PRIVATE_KEY){
-            return res.status(500).json({error : 'Erro interno do servidor: A chave privada JWT não está configurada corretamente.'});
+            return res.status(500).json({error : "Oops! Parece que a string de conexão não foi encontrada. Por favor, verifique as configurações e tente novamente."});
         }
     
         if(!req || !req.headers){
