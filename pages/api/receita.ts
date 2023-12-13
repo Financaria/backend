@@ -250,11 +250,6 @@ const handler = nc()
                 return res.status(400).json({error: 'Despesa não encontrada.'});
 
             };
-    
-            //if(req.query._id && req.query._id !== null && req.query._id !== undefined){
-            //    await ReceitaModel.findByIdAndDelete(receitaId);
-            //    return res.status(200).json({msg: `Receita Excluida com sucesso.`});
-            //};
 
             if (jaRecebido) {
                 // A receita estava marcada como RECEBIDA, então altera o saldo, diminuindo o valor da receita.
@@ -265,16 +260,9 @@ const handler = nc()
                 .findByIdAndDelete(receitaId, receita);
             return res.status(200).json({msg: 'Receita excluída com sucesso.', receita});
             if (!receita) {
-                //await ReceitaModel.deleteMany({ IdUsuario: user._id });
-                //return res.status(200).json({msg: `Todas as Receita Excluida com sucesso.`});
                 return res.status(400).json({error: 'Despesa não encontrada.'});
 
             };
-    
-            //if(req.query._id && req.query._id !== null && req.query._id !== undefined){
-            //    await ReceitaModel.findByIdAndDelete(receitaId);
-            //    return res.status(200).json({msg: `Receita Excluida com sucesso.`});
-            //};
 
             if (jaRecebido) {
                 // A receita estava marcada como RECEBIDA, então altera o saldo, diminuindo o valor da receita.
